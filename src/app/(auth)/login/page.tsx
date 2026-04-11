@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ClipboardList, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Github, Lock, Mail, MoveRight, SquareStack } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthRedirectCard } from "@/components/auth/AuthRedirectCard";
+import { authTheme } from "@/components/auth/authTheme";
+
+const REMEMBERED_EMAIL_KEY = "tm_remembered_email";
 
 export default function LoginPage() {
   const { login, loginWithGoogle, completeOAuthLogin } = useAuth();
@@ -16,8 +17,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Checking your workspace...");
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    if (!rememberedEmail) return;
+
+    setEmail(rememberedEmail);
+    setRememberMe(true);
+  }, []);
 
   useEffect(() => {
     const token = searchParams.get("token") || searchParams.get("jwt") || searchParams.get("accessToken");
@@ -37,9 +48,36 @@ export default function LoginPage() {
     }
   }, [completeOAuthLogin, searchParams]);
 
+  useEffect(() => {
+    if (!isLoading && !isGoogleLoading) return;
+
+    const messages = [
+      "Checking your workspace...",
+      "Verifying permissions...",
+      "Preparing your dashboard...",
+    ];
+
+    const interval = window.setInterval(() => {
+      setLoadingMessage((current) => {
+        const index = messages.indexOf(current);
+        return messages[(index + 1) % messages.length];
+      });
+    }, 900);
+
+    return () => window.clearInterval(interval);
+  }, [isLoading, isGoogleLoading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoadingMessage("Checking your workspace...");
     setIsLoading(true);
+
+    if (rememberMe) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+
     try {
       await login(email, password);
     } finally {
@@ -48,102 +86,200 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
+    setLoadingMessage("Redirecting to Google...");
     setIsGoogleLoading(true);
     loginWithGoogle();
   };
 
-  return (
-    <div className="flex min-h-screen">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 flex-col items-center justify-center p-12 text-white">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm mb-8">
-          <ClipboardList className="h-10 w-10 text-white" />
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight">TaskFlow</h1>
-        <p className="mt-4 text-center text-lg text-white/80 max-w-sm">
-          Streamline your team&apos;s workflow with role-based task management
-        </p>
-        <div className="mt-12 grid grid-cols-2 gap-4 w-full max-w-sm">
-          {[
-            { label: "Admin Control", desc: "Full system oversight" },
-            { label: "Team Projects", desc: "Manage & track projects" },
-            { label: "Task Tracking", desc: "Real-time status updates" },
-            { label: "Role-Based", desc: "Secure access control" },
-          ].map((f) => (
-            <div key={f.label} className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
-              <p className="font-semibold text-sm">{f.label}</p>
-              <p className="text-xs text-white/70 mt-0.5">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+  const handleGithubLogin = () => {
+    toast.info("GitHub sign in is not connected yet. Use email or Google for now.");
+  };
 
-      {/* Right panel */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center px-6 py-12 bg-background">
-        <div className="w-full max-w-md">
-          <div className="mb-8">
-            <div className="flex items-center gap-2 lg:hidden mb-6">
-              <ClipboardList className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">TaskFlow</span>
+  return (
+    <div className="h-screen overflow-hidden bg-[#f5f7fb] p-3 lg:p-5 animate-in fade-in duration-300">
+      {(isLoading || isGoogleLoading) ? (
+        <AuthRedirectCard
+          overlay
+          tone="progress"
+          title="Redirecting..."
+          statusTitle={isGoogleLoading ? "Google sign-in started" : "Authentication in progress"}
+          statusSubtitle={isGoogleLoading ? "Forwarding to Google authentication..." : loadingMessage}
+        />
+      ) : null}
+
+      <div className={authTheme.shell}>
+        <div className={authTheme.card}>
+          <div className={authTheme.leftPanel}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4c8cff] shadow-[0_14px_30px_rgba(76,140,255,0.38)]">
+                <SquareStack className="h-5 w-5" />
+              </div>
+              <span className={authTheme.brandText}>TaskMan</span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
-            <p className="mt-2 text-muted-foreground">Sign in to your account to continue</p>
+
+            <div className="pt-10">
+              <h1 className={`${authTheme.heroTitle} max-w-none whitespace-nowrap`}>
+                Stay Sharp, Stay Ahead
+              </h1>
+              <p className={authTheme.heroBody}>
+                The ultimate project management platform designed to streamline your workflow, empower your team, and deliver results faster.
+              </p>
+            </div>
+
+            <div className="border-t border-white/8 pt-6">
+              <div className="flex flex-wrap items-center gap-5">
+                <div className="flex items-center -space-x-2">
+                  {["AR", "SJ", "MK"].map((avatar, index) => (
+                    <div
+                      key={avatar}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#11192f] text-[12px] font-semibold text-white ${
+                        index === 0 ? "bg-[#f08a77]" : index === 1 ? "bg-[#56b6ff]" : "bg-[#7c66ff]"
+                      }`}
+                    >
+                      {avatar}
+                    </div>
+                  ))}
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#11192f] bg-white/10 text-[12px] font-semibold text-white">
+                    +2k
+                  </div>
+                </div>
+                <p className="text-[14px] text-white/66">
+                  Trusted by <span className="font-semibold text-white">2,000+</span> teams globally
+                </p>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Button type="button" variant="outline" className="w-full h-11 text-base font-semibold" onClick={handleGoogleLogin} disabled={isGoogleLoading || isLoading}>
-              {isGoogleLoading ? "Redirecting to Google..." : "Continue with Google"}
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
-              </div>
+          <div className={`${authTheme.rightPanel} justify-center`}>
+            <div>
+              <h2 className={authTheme.title}>Welcome back</h2>
+              <p className={authTheme.subtitle}>
+                Please enter your details to access your dashboard.
+              </p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" required autoComplete="email"
-                  className="pl-9" placeholder="you@example.com"
-                  value={email} onChange={(e) => setEmail(e.target.value)} />
+            <form onSubmit={handleSubmit} className={authTheme.form}>
+              <div className="space-y-2.5">
+                <label htmlFor="email" className={authTheme.label}>
+                  Email or Username
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8]" />
+                  <input
+                    id="email"
+                    type="text"
+                    required
+                    autoComplete="username"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={authTheme.input}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type={showPass ? "text" : "password"} required
-                  className="pl-9 pr-10" placeholder="••••••••"
-                  value={password} onChange={(e) => setPassword(e.target.value)} />
-                <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-4">
+                  <label htmlFor="password" className={authTheme.label}>
+                    Password
+                  </label>
+                  <Link href="/forgot-password" className="text-[14px] font-medium text-[#2f66ff] transition-opacity hover:opacity-70 hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8]" />
+                  <input
+                    id="password"
+                    type={showPass ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={authTheme.inputWithToggle}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((current) => !current)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8] transition-colors hover:text-[#475467]"
+                  >
+                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-3 text-[15px] text-[#475467]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#cbd5e1] text-[#2f66ff] focus:ring-[#2f66ff]"
+                />
+                Remember for 30 days
+              </label>
+
+              <button
+                type="submit"
+                disabled={isLoading || isGoogleLoading}
+                className={authTheme.primaryButton}
+              >
+                {isLoading ? "Signing in..." : "Sign in"}
+                <MoveRight className="h-4 w-4" />
+              </button>
+            </form>
+
+            <div className="mt-7">
+              <div className="flex items-center gap-4">
+                <div className="h-px flex-1 bg-[#e7edf5]" />
+                <span className="text-[12px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
+                  Or continue with
+                </span>
+                <div className="h-px flex-1 bg-[#e7edf5]" />
+              </div>
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading || isGoogleLoading}
+                  className={authTheme.secondaryButton}
+                >
+                  <span className="text-[20px] font-semibold text-[#ea4335]">G</span>
+                  {isGoogleLoading ? "Redirecting..." : "Google"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGithubLogin}
+                  className={authTheme.secondaryButton}
+                >
+                  <Github className="h-4 w-4" />
+                  GitHub
                 </button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Signing in...
-                </span>
-              ) : "Sign in"}
-            </Button>
-          </form>
+            <div className={authTheme.helperText}>
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="font-semibold text-[#2f66ff] hover:underline">
+                Register now
+              </Link>
+            </div>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Create one
-            </Link>
-          </p>
+            <div className={authTheme.footerLinks}>
+              <Link href="/privacy-policy" className="hover:text-[#64748b]">
+                Privacy Policy
+              </Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-[#64748b]">
+                Terms of Service
+              </Link>
+              <span>•</span>
+              <Link href="/help-center" className="hover:text-[#64748b]">
+                Help Center
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

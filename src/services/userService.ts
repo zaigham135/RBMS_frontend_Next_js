@@ -3,6 +3,11 @@ import type { ApiResponse } from "@/types/api";
 import type { User, Role, UserStatus } from "@/types/user";
 
 export const userService = {
+  getProfile: async (): Promise<ApiResponse<User>> => {
+    const res = await api.get("/api/user/profile");
+    return res.data;
+  },
+
   getAllEmployees: async (): Promise<ApiResponse<User[]>> => {
     const res = await api.get("/api/admin/employees");
     return res.data;

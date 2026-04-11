@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/common/DatePicker";
 import type { CreateTaskRequest, Priority } from "@/types/task";
 import type { Project } from "@/types/project";
 import type { User } from "@/types/user";
@@ -22,6 +23,7 @@ interface TaskFormModalProps {
   projects: Project[];
   employees: User[];  // active only
   isLoading?: boolean;
+  defaultAssigneeId?: number; // pre-populate assignee (e.g. from Team page)
 }
 
 const defaultForm: CreateTaskRequest = {
@@ -33,12 +35,14 @@ const defaultForm: CreateTaskRequest = {
   priority: "MEDIUM",
 };
 
-export function TaskFormModal({ open, onOpenChange, onSubmit, projects, employees, isLoading }: TaskFormModalProps) {
+export function TaskFormModal({ open, onOpenChange, onSubmit, projects, employees, isLoading, defaultAssigneeId }: TaskFormModalProps) {
   const [form, setForm] = useState<CreateTaskRequest>(defaultForm);
 
   useEffect(() => {
-    if (open) setForm(defaultForm);
-  }, [open]);
+    if (open) {
+      setForm({ ...defaultForm, assignedTo: defaultAssigneeId ?? 0 });
+    }
+  }, [open, defaultAssigneeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,8 +106,11 @@ export function TaskFormModal({ open, onOpenChange, onSubmit, projects, employee
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="task-due">Due Date</Label>
-              <Input id="task-due" type="date" value={form.dueDate}
-                onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+              <DatePicker
+                value={form.dueDate}
+                onChange={(v) => setForm({ ...form, dueDate: v })}
+                placeholder="Pick a due date"
+              />
             </div>
 
             <div className="space-y-1.5">

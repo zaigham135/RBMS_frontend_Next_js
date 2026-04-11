@@ -1,84 +1,129 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/common/PageHeader";
+import { Download, FolderOpen, ListChecks, CheckCircle2, Users } from "lucide-react";
+import { AppTopBar } from "@/components/common/AppTopBar";
+import { ActionButton } from "@/components/common/NexusUI";
+import { StatCard } from "@/components/manager/StatCard";
+import { QuickActionsPanel } from "@/components/manager/QuickActionsPanel";
+import { AssignedProjectsSection } from "@/components/manager/AssignedProjectsSection";
+import { TaskCompletionTrendChart } from "@/components/manager/TaskCompletionTrendChart";
+import { TeamWorkloadSection } from "@/components/manager/TeamWorkloadSection";
+import { RecentActivityFeed } from "@/components/manager/RecentActivityFeed";
+import { TaskFormModal } from "@/components/modals/TaskFormModal";
+import { useManagerDashboard, useManagerTeam } from "@/hooks/useManagerDashboard";
+import { useProjects } from "@/hooks/useProjects";
+import { useUsers } from "@/hooks/useUsers";
+import { useAuth } from "@/hooks/useAuth";
+import { downloadTextFile } from "@/lib/download";
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
-import { projectService } from "@/services/projectService";
-import { taskService } from "@/services/taskService";
-import { userService } from "@/services/userService";
-import { FolderKanban, ClipboardList, Users, CheckSquare } from "lucide-react";
 
 export default function ManagerDashboard() {
-  const [stats, setStats] = useState({ projects: 0, tasks: 0, team: 0, done: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  const { stats, activity, trend, isLoading } = useManagerDashboard();
+  const { employees } = useManagerTeam();
+  const { projects, fetchMyProjects } = useProjects();
+  const { activeEmployees, fetchManagerEmployees } = useUsers();
+  const { name } = useAuth();
+  const firstName = (name ?? "Manager").split(" ")[0];
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [projRes, taskRes, teamRes] = await Promise.all([
-          projectService.getMyProjects(),
-          taskService.getTasks({ page: 0, size: 1 }),
-          userService.getManagerEmployees(),
-        ]);
-        const allTasks = await taskService.getTasks({ page: 0, size: 100, status: "DONE" });
-        setStats({
-          projects: projRes.data?.length ?? 0,
-          tasks: taskRes.data?.totalElements ?? 0,
-          team: teamRes.data?.length ?? 0,
-          done: allTasks.data?.totalElements ?? 0,
-        });
-      } catch { /* silently fail */ }
-      finally { setIsLoading(false); }
-    };
-    load();
-  }, []);
-
-  const cards = [
-    { label: "My Projects", value: stats.projects, icon: FolderKanban, color: "from-blue-500 to-cyan-500" },
-    { label: "Total Tasks", value: stats.tasks, icon: ClipboardList, color: "from-violet-500 to-purple-500" },
-    { label: "Team Members", value: stats.team, icon: Users, color: "from-emerald-500 to-teal-500" },
-    { label: "Tasks Done", value: stats.done, icon: CheckSquare, color: "from-orange-500 to-amber-500" },
-  ];
+    fetchMyProjects();
+    fetchManagerEmployees();
+  }, [fetchMyProjects, fetchManagerEmployees]);
 
   return (
-    <div>
-      <PageHeader title="Manager Dashboard" description="Overview of your projects and team" />
+    <div className="min-h-full bg-[#f8fafc] dark:bg-[#0f172a]">
+      <AppTopBar title="Dashboard" searchPlaceholder="Search projects or tasks..." />
 
-      {isLoading ? <CardSkeleton count={4} /> : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map((card) => (
-            <div key={card.label} className="group relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all hover:shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
-                  <p className="mt-2 text-4xl font-bold tracking-tight">{card.value}</p>
-                </div>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${card.color} shadow-sm`}>
-                  <card.icon className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className={`absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r ${card.color} opacity-0 transition-opacity group-hover:opacity-100`} />
-            </div>
-          ))}
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <p className="text-[14px] font-medium text-[#607089] dark:text-[#94a3b8]">Welcome back, {firstName}</p>
+          <ActionButton
+            icon={Download}
+            className="px-4 py-2.5 text-[13px]"
+            onClick={() => downloadTextFile(
+              "manager-dashboard-summary.txt",
+              [
+                `Active Projects: ${stats?.activeProjects ?? 0}`,
+                `Pending Tasks: ${stats?.pendingTasks ?? 0}`,
+                `Completed This Week: ${stats?.completedThisWeek ?? 0}`,
+                `Team Members: ${stats?.teamMembers ?? 0}`,
+              ].join("\n")
+            )}
+          >
+            Export Snapshot
+          </ActionButton>
         </div>
-      )}
 
-      <div className="mt-8 rounded-xl border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {[
-            { label: "My Projects", href: "/manager/projects", desc: "View and manage your projects" },
-            { label: "Manage Tasks", href: "/manager/tasks", desc: "Create and update tasks" },
-            { label: "View Team", href: "/manager/team", desc: "See your team members" },
-          ].map((a) => (
-            <a key={a.href} href={a.href}
-              className="flex flex-col gap-1 rounded-lg border p-4 transition-all hover:border-primary hover:bg-primary/5">
-              <p className="font-semibold text-sm">{a.label}</p>
-              <p className="text-xs text-muted-foreground">{a.desc}</p>
-            </a>
-          ))}
+        {/* Stats + Quick Actions */}
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          {isLoading ? (
+            <>
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCard
+                icon={<FolderOpen className="h-5 w-5 text-blue-600" />}
+                label="Active Projects"
+                value={stats?.activeProjects ?? 0}
+                trend={stats?.activeProjectsTrend}
+                iconBg="bg-blue-50"
+              />
+              <StatCard
+                icon={<ListChecks className="h-5 w-5 text-amber-600" />}
+                label="Pending Tasks"
+                value={stats?.pendingTasks ?? 0}
+                iconBg="bg-amber-50"
+              />
+              <StatCard
+                icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
+                label="Completed This Week"
+                value={stats?.completedThisWeek ?? 0}
+                trend={stats?.completedThisWeekTrend}
+                trendColor="green"
+                iconBg="bg-green-50"
+              />
+              <StatCard
+                icon={<Users className="h-5 w-5 text-purple-600" />}
+                label="Team Members"
+                value={stats?.teamMembers ?? 0}
+                trend={stats?.teamMembersTrend}
+                iconBg="bg-purple-50"
+              />
+            </>
+          )}
+        </div>
+
+        {/* Main content + sidebar */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+          {/* Left column */}
+          <div className="space-y-6">
+            <AssignedProjectsSection projects={projects} />
+            <TaskCompletionTrendChart data={trend} />
+          </div>
+
+          {/* Right column */}
+          <div className="space-y-4">
+            <QuickActionsPanel onCreateTask={() => setCreateOpen(true)} />
+            <TeamWorkloadSection employees={employees} />
+            <RecentActivityFeed activity={activity} />
+          </div>
         </div>
       </div>
+
+      <TaskFormModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSubmit={async () => {}}
+        projects={projects}
+        employees={activeEmployees}
+        isLoading={false}
+      />
     </div>
   );
 }

@@ -31,6 +31,12 @@ export const projectService = {
     return res.data;
   },
 
+  // Employee — projects derived from their assigned tasks
+  getEmployeeProjects: async (): Promise<ApiResponse<Project[]>> => {
+    const res = await api.get("/api/user/my-projects");
+    return res.data;
+  },
+
   createProject: async (data: CreateProjectRequest): Promise<ApiResponse<Project>> => {
     const res = await api.post("/api/manager/projects", data);
     return res.data;

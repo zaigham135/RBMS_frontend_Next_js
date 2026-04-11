@@ -20,7 +20,9 @@ export function useProjects() {
       const res: any = await projectService.getAllProjects();
       const payload = res.data || res;
       const arr = Array.isArray(payload) ? payload : (payload.content || payload.projects || payload.data || []);
-      setProjects(arr);
+      // Deduplicate by id — backend joins may return duplicate rows
+      const unique = Array.from(new Map(arr.map((p: any) => [p.id, p])).values());
+      setProjects(unique);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

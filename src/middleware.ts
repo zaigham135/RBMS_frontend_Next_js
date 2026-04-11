@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicPaths = ["/login", "/register", "/auth/callback"];
+const publicPaths = ["/login", "/register", "/auth/callback", "/forgot-password"];
 
 // Role-to-path mapping
 const rolePathMap: Record<string, string[]> = {

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/common/DatePicker";
 import type { Task, UpdateTaskRequest, TaskStatus, Priority } from "@/types/task";
 
 interface TaskUpdateFormModalProps {
@@ -91,8 +92,11 @@ export function TaskUpdateFormModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="upd-due">Due Date</Label>
-                <Input id="upd-due" type="date" value={form.dueDate ?? ""}
-                  onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+                <DatePicker
+                  value={form.dueDate ?? ""}
+                  onChange={(v) => setForm({ ...form, dueDate: v })}
+                  placeholder="Pick a due date"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Priority</Label>

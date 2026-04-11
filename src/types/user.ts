@@ -9,6 +9,13 @@ export interface User {
   status: UserStatus;
   profilePhoto?: string;
   createdAt: string;
+  designation?: string | null;
+}
+
+export interface Designation {
+  id: number;
+  name: string;
+  applicableRole?: string | null; // "MANAGER" | "EMPLOYEE" | null
 }
 
 export interface AuthResponse {
