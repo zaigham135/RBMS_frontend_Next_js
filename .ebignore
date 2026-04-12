@@ -1,0 +1,9 @@
+# Don't upload these to AWS
+.git
+.gitignore
+README.md
+.vscode
+.idea
+
+# Include node_modules and .next in deployment
+# AWS will use the pre-built application
