@@ -49,10 +49,9 @@ export const authService = {
   },
 
   getGoogleAuthUrl: (): string => {
-    // On browser, use relative path (proxied by Next.js) — avoids mixed content on Vercel
-    const base = typeof window !== "undefined"
-      ? ""
-      : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080");
+    // Google OAuth MUST go directly to backend (not through proxy)
+    // because it requires browser redirect, not an API call
+    const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     return `${base}/oauth2/authorization/google`;
   },
 
