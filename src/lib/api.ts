@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken, clearAuth } from "./auth";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
 });
 
 // Request interceptor — attach JWT token
