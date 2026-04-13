@@ -36,17 +36,29 @@ function RoleDropdown({ userId, currentRole, onUpdate }: {
   userId: number; currentRole: Role; onUpdate: (id: number, role: Role) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [open]);
+
+  const handleOpen = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUpward(spaceBelow < 150);
+    }
+    setOpen(v => !v);
+  };
+
   const current = ROLE_OPTIONS.find(r => r.value === currentRole);
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(v => !v)}
+      <button type="button" onClick={handleOpen}
         className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all min-w-[110px] ${
           open ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300"
                : "border-[#d6e2ef] bg-white text-[#1f2937] hover:border-blue-300 dark:border-[#334155] dark:bg-[#1e293b] dark:text-[#f1f5f9]"
@@ -55,7 +67,9 @@ function RoleDropdown({ userId, currentRole, onUpdate }: {
         <ChevronDown className={`h-3.5 w-3.5 opacity-40 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-40 rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl dark:bg-[#1e293b] dark:border-[#334155] dark:shadow-black/40 animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className={`absolute right-0 z-50 w-40 rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl dark:bg-[#1e293b] dark:border-[#334155] dark:shadow-black/40 animate-in fade-in-0 zoom-in-95 duration-100 ${
+          openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5"
+        }`}>
           {ROLE_OPTIONS.map(opt => {
             const isSel = currentRole === opt.value;
             return (
@@ -83,16 +97,28 @@ function DesignationDropdown({ userId, current, designations, onUpdate }: {
   designations: Designation[]; onUpdate: (userId: number, d: string | null) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [open]);
+
+  const handleOpen = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUpward(spaceBelow < 200);
+    }
+    setOpen(v => !v);
+  };
+
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(v => !v)}
+      <button type="button" onClick={handleOpen}
         className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all min-w-[130px] ${
           open ? "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950 dark:text-purple-300"
                : current
@@ -104,7 +130,9 @@ function DesignationDropdown({ userId, current, designations, onUpdate }: {
         <ChevronDown className={`h-3 w-3 opacity-40 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl dark:bg-[#1e293b] dark:border-[#334155] dark:shadow-black/40 animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className={`absolute right-0 z-50 w-52 rounded-2xl border border-gray-100 bg-white py-1.5 shadow-xl dark:bg-[#1e293b] dark:border-[#334155] dark:shadow-black/40 animate-in fade-in-0 zoom-in-95 duration-100 ${
+          openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5"
+        }`}>
           <button type="button" onClick={() => { onUpdate(userId, null); setOpen(false); }}
             className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium transition-colors ${
               !current ? "bg-gray-50 text-gray-900 dark:bg-[#334155] dark:text-white"
