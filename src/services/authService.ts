@@ -8,24 +8,23 @@ export const authService = {
       const res = await api.post("/api/auth/login", data);
       return res.data;
     } catch (error: any) {
-      // Handle 404 specifically for user not found
+      const msg = error.response?.data?.message;
+      if (error.response?.status === 429) {
+        throw new Error(msg || "Too many login attempts. Please try again after 1 minute.");
+      }
       if (error.response?.status === 404) {
-        throw new Error("User not found. Please check your credentials.");
+        throw new Error(msg || "No account found with this email.");
       }
-      // Handle 400 Bad Request (invalid credentials)
       if (error.response?.status === 400) {
-        throw new Error("Invalid email or password. Please try again.");
+        throw new Error(msg || "Invalid email or password.");
       }
-      // Handle 500 or other server errors
       if (error.response?.status >= 500) {
         throw new Error("Server error. Please try again later.");
       }
-      // Handle network errors
       if (!error.response) {
         throw new Error("Network error. Please check your connection.");
       }
-      // Default error
-      throw new Error("Login failed. Please try again.");
+      throw new Error(msg || "Login failed. Please try again.");
     }
   },
 
@@ -34,10 +33,11 @@ export const authService = {
       const res = await api.post("/api/auth/signup", data);
       return res.data;
     } catch (error: any) {
+      const msg = error.response?.data?.message;
       if (error.response?.status === 400) {
-        throw new Error("Registration failed. Please check your information.");
+        throw new Error(msg || "Registration failed. Please check your information.");
       }
-      throw new Error("Registration failed. Please try again.");
+      throw new Error(msg || "Registration failed. Please try again.");
     }
   },
 

@@ -29,13 +29,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401 (token expiry)
+// Response interceptor — handle 401 (token expiry) and 429 (rate limit)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const msg = error.response?.data?.message || "Session expired. Please login again.";
       clearAuth();
       if (typeof window !== "undefined") {
+        // Show message before redirect
+        sessionStorage.setItem("auth_error", msg);
         window.location.href = "/login";
       }
     }

@@ -30,6 +30,15 @@ export function LoginClient() {
     setRememberMe(true);
   }, []);
 
+  // Show session expired or auth error message
+  useEffect(() => {
+    const authError = sessionStorage.getItem("auth_error");
+    if (authError) {
+      toast.error(authError);
+      sessionStorage.removeItem("auth_error");
+    }
+  }, []);
+
   useEffect(() => {
     const token = searchParams.get("token") || searchParams.get("jwt") || searchParams.get("accessToken");
     const error = searchParams.get("error");
