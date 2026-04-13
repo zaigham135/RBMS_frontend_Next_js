@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, Briefcase, Calendar, Mail, Shield, User, Settings, LogOut, Camera } from "lucide-react";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { ProfilePhotoUploader } from "@/components/common/ProfilePhotoUploader";
+import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { useAuth } from "@/hooks/useAuth";
 import { userService } from "@/services/userService";
 import { getDashboardPath } from "@/lib/auth";
@@ -35,6 +36,8 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
   const { name, profilePhoto, role, email, userId, uploadProfilePhoto, logout } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     userService.getProfile()
@@ -56,6 +59,20 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
   const handleUpload = async (file: File) => {
     const next = await uploadProfilePhoto(file);
     setProfile(p => p ? { ...p, profilePhoto: next } : p);
+  };
+
+  const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleCropDone = async (croppedFile: File) => {
+    setCropSrc(null);
+    await handleUpload(croppedFile);
   };
 
   const dashPath = getDashboardPath(role ?? "EMPLOYEE");
@@ -84,15 +101,20 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
                       src={active.profilePhoto}
                       className="h-20 w-20 ring-4 ring-white text-2xl"
                     />
-                    <label className="absolute bottom-0 right-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    >
                       <Camera className="h-3.5 w-3.5" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                      />
-                    </label>
+                    </button>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCameraChange}
+                    />
                   </div>
                 )}
               </div>
@@ -208,5 +230,14 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
         </div>
       </div>
     </div>
+
+    {/* Crop modal */}
+    {cropSrc && (
+      <ImageCropModal
+        imageSrc={cropSrc}
+        onCropDone={handleCropDone}
+        onCancel={() => setCropSrc(null)}
+      />
+    )}
   );
 }
