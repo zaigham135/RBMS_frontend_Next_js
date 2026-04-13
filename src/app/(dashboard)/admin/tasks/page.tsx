@@ -48,6 +48,7 @@ export default function AdminTasksPage() {
   const [page, setPage] = useState(0);
   const [projectId, setProjectId] = useState("");
   const [status, setStatus] = useState("");
+  const [showManagerTasks, setShowManagerTasks] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [updateTarget, setUpdateTarget] = useState<Task | null>(null);
   const [viewTarget, setViewTarget] = useState<Task | null>(null);
@@ -86,7 +87,11 @@ export default function AdminTasksPage() {
     finally { setIsDeleting(false); setDeleteTarget(null); }
   };
 
-  const tasks = paginatedData?.content ?? [];
+  const allTasks = paginatedData?.content ?? [];
+  // Filter: if showManagerTasks, show only tasks assigned to MANAGER role users
+  const tasks = showManagerTasks
+    ? allTasks.filter(t => t.assignedToRole === "MANAGER")
+    : allTasks;
 
   return (
     <div className="min-h-full bg-[#f7fbff] dark:bg-[#0f172a]">
@@ -147,6 +152,19 @@ export default function AdminTasksPage() {
           }]}
           actions={
             <div className="flex items-center gap-2">
+              {/* Manager Tasks toggle */}
+              <button
+                type="button"
+                onClick={() => setShowManagerTasks(v => !v)}
+                className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${
+                  showManagerTasks
+                    ? "border-purple-400 bg-purple-600 text-white shadow-sm"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-600 dark:border-[#334155] dark:bg-[#1e293b] dark:text-[#94a3b8]"
+                }`}
+              >
+                <span className={`h-2 w-2 rounded-full ${showManagerTasks ? "bg-white" : "bg-purple-400"}`} />
+                Manager Tasks
+              </button>
               <button
                 type="button"
                 onClick={() => downloadTextFile("tasks-export.csv", ["title,project,assignee,priority,status,dueDate", ...tasks.map(t => `"${t.title}","${t.projectName}","${t.assignedToName}","${t.priority}","${t.status}","${t.dueDate}"`)].join("\n"), "text/csv;charset=utf-8")}

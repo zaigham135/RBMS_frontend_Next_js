@@ -123,11 +123,10 @@ export default function EmployeeDashboard() {
 
   const nextEvent = [...calEvents]
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-    .find(e => new Date(e.startTime) >= new Date());
+    .find(e => new Date(e.endTime ?? e.startTime) >= new Date());
 
-  // Fallback: most recent past event if no upcoming
-  const reminderEvent = nextEvent ?? [...calEvents]
-    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())[0] ?? null;
+  // Only show if there's an upcoming/current event — no fallback to past events
+  const reminderEvent = nextEvent ?? null;
 
   const attendeeUsers = teammates.map(t => ({ id: t.id, name: t.name, email: t.email }));
   const visibleTeam = showAllTeam ? teammates : teammates.slice(0, 3);

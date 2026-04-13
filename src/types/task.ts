@@ -20,6 +20,7 @@ export interface Task {
   assignedToName: string;
   assignedToEmail?: string;
   assignedToPhoto?: string;
+  assignedToRole?: string;
   managerId?: number;
   managerName?: string;
   managerEmail?: string;
