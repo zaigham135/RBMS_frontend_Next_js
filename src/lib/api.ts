@@ -1,9 +1,13 @@
 import axios from "axios";
 import { getToken, clearAuth } from "./auth";
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
-});
+// On browser: use /backend proxy (Vercel rewrites to http backend — avoids mixed content)
+// On server (SSR): call backend directly
+const baseURL = typeof window !== "undefined"
+  ? "/backend"
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080");
+
+const api = axios.create({ baseURL });
 
 // Request interceptor — attach JWT token
 api.interceptors.request.use(
@@ -13,7 +17,6 @@ api.interceptors.request.use(
     } else {
       config.headers["Content-Type"] = "application/json";
     }
-
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
