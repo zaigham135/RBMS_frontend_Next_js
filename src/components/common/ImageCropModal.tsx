@@ -16,9 +16,11 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<File> {
   image.src = imageSrc;
   await new Promise(resolve => { image.onload = resolve; });
 
+  // Cap output size at 400x400 for profile photos
+  const outputSize = Math.min(400, pixelCrop.width, pixelCrop.height);
   const canvas = document.createElement("canvas");
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  canvas.width = outputSize;
+  canvas.height = outputSize;
   const ctx = canvas.getContext("2d")!;
 
   ctx.drawImage(
@@ -26,13 +28,13 @@ async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<File> {
     pixelCrop.x, pixelCrop.y,
     pixelCrop.width, pixelCrop.height,
     0, 0,
-    pixelCrop.width, pixelCrop.height
+    outputSize, outputSize
   );
 
   return new Promise((resolve) => {
     canvas.toBlob(blob => {
       resolve(new File([blob!], "profile-photo.jpg", { type: "image/jpeg" }));
-    }, "image/jpeg", 0.9);
+    }, "image/jpeg", 0.85); // 85% quality — good balance of size/quality
   });
 }
 

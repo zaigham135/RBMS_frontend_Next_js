@@ -42,10 +42,23 @@ export const authService = {
   },
 
   uploadProfilePhoto: async (file: File): Promise<ApiResponse<{ profilePhoto: string }>> => {
+    // File uploads must bypass the Vercel proxy (413/502 errors)
+    // Send directly to backend with the JWT token
+    const { getToken } = await import("@/lib/auth");
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     const formData = new FormData();
     formData.append("file", file);
-    const res = await api.post("/api/auth/upload-photo", formData);
-    return res.data;
+    const token = getToken();
+    const res = await fetch(`${backendUrl}/api/auth/upload-photo`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to upload photo.");
+    }
+    return res.json();
   },
 
   getGoogleAuthUrl: (): string => {
