@@ -1,9 +1,13 @@
 import axios from "axios";
 import { getToken, clearAuth } from "./auth";
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
-});
+// On browser: use relative URL so Next.js proxy handles it (avoids mixed content on Vercel)
+// On server (SSR): call backend directly with full URL
+const baseURL = typeof window !== "undefined"
+  ? ""
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080");
+
+const api = axios.create({ baseURL });
 
 // Request interceptor — attach JWT token
 api.interceptors.request.use(
