@@ -106,12 +106,8 @@ export function useAuth() {
 
   const logout = () => {
     clearAuth();
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("email");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("profilePhoto");
+    // Clear all auth-related keys including Zustand persist key
+    ["token", "role", "name", "email", "userId", "profilePhoto", "tm-auth-storage"].forEach(k => localStorage.removeItem(k));
     document.cookie = "tm_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
     document.cookie = "tm_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
     router.push("/login");
