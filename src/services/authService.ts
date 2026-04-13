@@ -43,9 +43,13 @@ export const authService = {
 
   uploadProfilePhoto: async (file: File): Promise<ApiResponse<{ profilePhoto: string }>> => {
     // File uploads must bypass the Vercel proxy (413/502 errors)
-    // Send directly to backend with the JWT token
+    // Send directly to backend with the JWT token.
+    // Auto-upgrade to https when the page is served over HTTPS to avoid mixed content.
     const { getToken } = await import("@/lib/auth");
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    let backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    if (typeof window !== "undefined" && window.location.protocol === "https:" && backendUrl.startsWith("http://")) {
+      backendUrl = backendUrl.replace("http://", "https://");
+    }
     const formData = new FormData();
     formData.append("file", file);
     const token = getToken();
