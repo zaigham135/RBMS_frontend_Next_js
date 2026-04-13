@@ -64,6 +64,7 @@ export function useAuth() {
 
   const finalizeAuth = useCallback((payload: AuthPayload) => {
     localStorage.setItem("token", payload.token);
+    localStorage.setItem("tm_token", payload.token);
     localStorage.setItem("role", payload.role);
     localStorage.setItem("name", payload.name);
     if (payload.email) localStorage.setItem("email", payload.email);
