@@ -63,15 +63,6 @@ export function useAuth() {
   const router = useRouter();
 
   const finalizeAuth = useCallback((payload: AuthPayload) => {
-    // Clear previous auth keys before setting new ones
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("email");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("profilePhoto");
-    localStorage.removeItem("tm-auth-storage");
-    // Set new auth data
     localStorage.setItem("token", payload.token);
     localStorage.setItem("role", payload.role);
     localStorage.setItem("name", payload.name);
