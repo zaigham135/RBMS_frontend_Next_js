@@ -7,7 +7,10 @@ const baseURL = typeof window !== "undefined"
   ? ""
   : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080");
 
-const api = axios.create({ baseURL });
+const api = axios.create({ 
+  baseURL,
+  withCredentials: false,  // Don't send cookies — use JWT only
+});
 
 // Request interceptor — attach JWT token
 api.interceptors.request.use(
