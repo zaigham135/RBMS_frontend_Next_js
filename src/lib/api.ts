@@ -1,8 +1,14 @@
 import axios from "axios";
 import { getToken, clearAuth } from "./auth";
 
+// On the browser, use empty baseURL so requests go to the same origin (proxied by Next.js)
+// On the server (SSR), use the full backend URL directly
+const baseURL = typeof window !== "undefined"
+  ? ""
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080");
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+  baseURL,
 });
 
 // Request interceptor — attach JWT token
