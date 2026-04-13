@@ -57,8 +57,9 @@ export default function AdminTasksPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const load = useCallback(() => {
-    fetchTasks({ page, size: PAGE_SIZE, projectId, status });
-  }, [page, projectId, status, fetchTasks]);
+    // When manager filter is on, fetch all tasks (large page) to filter client-side
+    fetchTasks({ page: showManagerTasks ? 0 : page, size: showManagerTasks ? 200 : PAGE_SIZE, projectId, status });
+  }, [page, projectId, status, fetchTasks, showManagerTasks]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { fetchAllProjects(); fetchAllUsers(); }, [fetchAllProjects, fetchAllUsers]);
@@ -155,7 +156,7 @@ export default function AdminTasksPage() {
               {/* Manager Tasks toggle */}
               <button
                 type="button"
-                onClick={() => setShowManagerTasks(v => !v)}
+                onClick={() => { setShowManagerTasks(v => !v); setPage(0); }}
                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${
                   showManagerTasks
                     ? "border-purple-400 bg-purple-600 text-white shadow-sm"
