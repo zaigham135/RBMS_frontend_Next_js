@@ -78,6 +78,7 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
   const dashPath = getDashboardPath(role ?? "EMPLOYEE");
 
   return (
+    <>
     <div className="min-h-full bg-[#f8fafc] dark:bg-[#0f172a]">
       {topBar}
 
@@ -231,13 +232,14 @@ export function ProfilePage({ topBar }: ProfilePageProps) {
       </div>
     </div>
 
-    {/* Crop modal */}
-    {cropSrc && (
-      <ImageCropModal
-        imageSrc={cropSrc}
-        onCropDone={handleCropDone}
-        onCancel={() => setCropSrc(null)}
-      />
-    )}
+      {/* Crop modal */}
+      {cropSrc && (
+        <ImageCropModal
+          imageSrc={cropSrc}
+          onCropDone={handleCropDone}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
+    </>
   );
 }
