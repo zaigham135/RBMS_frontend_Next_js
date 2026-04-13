@@ -38,6 +38,7 @@ export default function ManagerTasksPage() {
   const [page, setPage]           = useState(0);
   const [status, setStatus]       = useState("");
   const [projectId, setProjectId] = useState("");
+  const [showMyTasks, setShowMyTasks] = useState(false);
   const [createOpen, setCreateOpen]       = useState(false);
   const [updateTarget, setUpdateTarget]   = useState<Task | null>(null);
   const [viewTarget, setViewTarget]       = useState<Task | null>(null);
@@ -50,6 +51,11 @@ export default function ManagerTasksPage() {
   }, [page, status, projectId, fetchTasks]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Filter tasks: if showMyTasks, show only tasks assigned to the manager
+  const tasks = (paginatedData?.content ?? []).filter(task =>
+    showMyTasks ? (task.assignedToId ?? task.assignedTo) === Number(userId) : true
+  );
   useEffect(() => { fetchMyProjects(); fetchManagerEmployees(); }, [fetchMyProjects, fetchManagerEmployees]);
 
   const handleView = useCallback(async (task: Task) => {
@@ -80,7 +86,6 @@ export default function ManagerTasksPage() {
   const handleProjectChange = (v: string) => { setProjectId(v); setPage(0); };
   const handleClearAll      = () => { setStatus(""); setProjectId(""); setPage(0); };
 
-  const tasks = paginatedData?.content ?? [];
   const isOwnAssignedTask = updateTarget
     ? (updateTarget.assignedToId ?? updateTarget.assignedTo) === Number(userId)
     : false;
@@ -93,6 +98,19 @@ export default function ManagerTasksPage() {
         {/* View toggle + filter bar */}
         <div className="flex flex-wrap items-center gap-3">
           <ViewToggle options={["List View", "Board"]} value={view} onChange={setView} />
+          {/* My Tasks toggle */}
+          <button
+            type="button"
+            onClick={() => setShowMyTasks(v => !v)}
+            className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors ${
+              showMyTasks
+                ? "border-purple-400 bg-purple-600 text-white shadow-sm"
+                : "border-gray-200 bg-white text-gray-600 hover:border-purple-300 hover:text-purple-600 dark:border-[#334155] dark:bg-[#1e293b] dark:text-[#94a3b8]"
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${showMyTasks ? "bg-white" : "bg-purple-400"}`} />
+            My Tasks
+          </button>
         </div>
 
         <FilterBar

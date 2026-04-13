@@ -65,11 +65,18 @@ export function TeamRosterTable({ employees, onAssign }: TeamRosterTableProps) {
                 <td className="px-5 py-4 text-sm text-gray-600 dark:text-[#94a3b8]">{emp.role}</td>
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap gap-1">
-                    {emp.activeProjects.slice(0, 3).map((proj) => (
-                      <span key={proj} className="rounded-full bg-blue-50 dark:bg-[#1e3a5f] px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-300">
-                        {proj}
-                      </span>
-                    ))}
+                    {(emp.projectDetails ?? emp.activeProjects.map(name => ({ name, status: 'ACTIVE' }))).slice(0, 3).map((proj) => {
+                      const isOnHold = proj.status === 'ON_HOLD';
+                      return (
+                        <span key={proj.name} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          isOnHold
+                            ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
+                            : "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                        }`}>
+                          {proj.name}
+                        </span>
+                      );
+                    })}
                     {emp.activeProjects.length === 0 && <span className="text-xs text-gray-400 dark:text-[#64748b]">—</span>}
                   </div>
                 </td>

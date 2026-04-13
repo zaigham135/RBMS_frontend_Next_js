@@ -8,6 +8,7 @@ export interface EmployeeWithWorkload {
   workloadPercent: number;
   department: string;
   activeProjects: string[];
+  projectDetails?: { name: string; status: string }[];
 }
 
 export interface ManagerTeamStats {
