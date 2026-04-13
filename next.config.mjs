@@ -9,6 +9,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Increase body size limit for file uploads proxied through Vercel
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },

@@ -42,27 +42,14 @@ export const authService = {
   },
 
   uploadProfilePhoto: async (file: File): Promise<ApiResponse<{ profilePhoto: string }>> => {
-    // File uploads must bypass the Vercel proxy (413/502 errors)
-    // Send directly to backend with the JWT token.
-    // Auto-upgrade to https when the page is served over HTTPS to avoid mixed content.
-    const { getToken } = await import("@/lib/auth");
-    let backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-    if (typeof window !== "undefined" && window.location.protocol === "https:" && backendUrl.startsWith("http://")) {
-      backendUrl = backendUrl.replace("http://", "https://");
-    }
+    // Route through the Vercel proxy (/api/auth/upload-photo) so the browser
+    // never calls the backend directly — avoids mixed content and HTTPS issues.
     const formData = new FormData();
     formData.append("file", file);
-    const token = getToken();
-    const res = await fetch(`${backendUrl}/api/auth/upload-photo`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to upload photo.");
-    }
-    return res.json();
+    // Let the browser set Content-Type with the correct multipart boundary.
+    // The api interceptor deletes Content-Type for FormData, which is correct.
+    const res = await api.post("/api/auth/upload-photo", formData);
+    return res.data;
   },
 
   getGoogleAuthUrl: (): string => {
