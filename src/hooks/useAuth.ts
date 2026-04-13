@@ -63,6 +63,9 @@ export function useAuth() {
   const router = useRouter();
 
   const finalizeAuth = useCallback((payload: AuthPayload) => {
+    // Clear all previous auth data first to prevent stale data
+    localStorage.clear();
+    // Set new auth data
     localStorage.setItem("token", payload.token);
     localStorage.setItem("role", payload.role);
     localStorage.setItem("name", payload.name);
