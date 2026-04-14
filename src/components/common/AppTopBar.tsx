@@ -33,10 +33,18 @@ export function AppTopBar({ title, searchPlaceholder = "Search anything..." }: A
   const [searchOpen, setSearchOpen]   = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const barRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // The layout wraps content in <main class="overflow-y-auto">.
+    // window.scrollY is always 0 — we must listen to the scrollable parent.
+    const scrollEl = barRef.current?.closest("main") ?? window;
+    const getScrollTop = () =>
+      scrollEl instanceof Window ? scrollEl.scrollY : (scrollEl as Element).scrollTop;
+
+    const onScroll = () => setScrolled(getScrollTop() > 10);
+    scrollEl.addEventListener("scroll", onScroll, { passive: true });
+    return () => scrollEl.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -44,7 +52,7 @@ export function AppTopBar({ title, searchPlaceholder = "Search anything..." }: A
   }, [searchOpen]);
 
   return (
-    <div className={`sticky top-0 z-40 transition-all duration-300 ${
+    <div ref={barRef} className={`sticky top-0 z-40 transition-all duration-300 ${
       scrolled
         ? "border-b border-[#e3ebf5]/60 dark:border-[#1e293b]/60 bg-white/70 dark:bg-[#0f172a]/70 backdrop-blur-2xl shadow-[0_1px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_20px_rgba(0,0,0,0.3)]"
         : "border-b border-transparent bg-white/40 dark:bg-[#0f172a]/40 backdrop-blur-xl"
