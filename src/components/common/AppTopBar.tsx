@@ -65,15 +65,15 @@ export function AppTopBar({ title, searchPlaceholder = "Search anything..." }: A
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        {/* Title */}
-        <h1 className="text-[16px] sm:text-[18px] font-bold tracking-[-0.03em] text-[#101828] dark:text-white truncate min-w-0">
+      <div className="flex items-center gap-3 min-h-[40px]">
+        {/* Title — flex-1 so it takes available space and truncates */}
+        <h1 className="flex-1 min-w-0 text-[16px] sm:text-[18px] font-bold tracking-[-0.03em] text-[#101828] dark:text-white truncate">
           {title}
         </h1>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Search — full bar on md+, icon-only on mobile */}
-          <label className="hidden md:flex items-center gap-2.5 rounded-[14px] bg-[#edf4fa]/80 dark:bg-[#1e293b]/80 px-3.5 py-2 text-[#667085] dark:text-[#94a3b8] w-[220px] lg:w-[280px]">
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Search — full bar on sm+, icon-only on mobile */}
+          <label className="hidden sm:flex items-center gap-2.5 rounded-[14px] bg-[#edf4fa]/80 dark:bg-[#1e293b]/80 px-3.5 py-2 text-[#667085] dark:text-[#94a3b8] w-[180px] lg:w-[260px] cursor-text">
             <Search className="h-4 w-4 shrink-0" />
             <input
               aria-label={searchPlaceholder}
@@ -85,7 +85,7 @@ export function AppTopBar({ title, searchPlaceholder = "Search anything..." }: A
             type="button"
             aria-label="Open search"
             onClick={() => setSearchOpen(true)}
-            className="flex md:hidden h-9 w-9 items-center justify-center rounded-full border border-[#e3ebf5] dark:border-[#1e293b] bg-white/80 dark:bg-[#1e293b]/80 text-[#51607a] dark:text-[#94a3b8]"
+            className="flex sm:hidden h-9 w-9 items-center justify-center rounded-full border border-[#e3ebf5] dark:border-[#1e293b] bg-white/80 dark:bg-[#1e293b]/80 text-[#51607a] dark:text-[#94a3b8]"
           >
             <Search className="h-4 w-4" />
           </button>

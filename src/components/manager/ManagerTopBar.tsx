@@ -44,19 +44,21 @@ export function ManagerTopBar({ pageTitle, breadcrumbPage, searchPlaceholder = "
         </div>
       )}
 
+      {/* Breadcrumb — desktop only, above the main row */}
       <div className="hidden md:flex items-center gap-1 text-xs text-gray-400 dark:text-[#475569] mb-1">
         <span>Management</span>
         <span className="text-blue-500 font-medium">&gt; {breadcrumbPage}</span>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-[17px] sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight truncate min-w-0">{pageTitle}</h1>
+      <div className="flex items-center gap-3 min-h-[40px]">
+        {/* Title — flex-1 so it never pushes the actions row */}
+        <h1 className="flex-1 min-w-0 text-[16px] sm:text-[18px] font-bold text-gray-900 dark:text-white tracking-tight truncate">{pageTitle}</h1>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-[#475569]" />
             <input type="text" placeholder={searchPlaceholder}
-              className="h-9 w-44 lg:w-56 rounded-lg border border-gray-200/80 dark:border-[#1e293b] bg-gray-50/80 dark:bg-[#1e293b]/80 pl-9 pr-3 text-sm text-gray-700 dark:text-[#94a3b8] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" />
+              className="h-9 w-40 lg:w-52 rounded-lg border border-gray-200/80 dark:border-[#1e293b] bg-gray-50/80 dark:bg-[#1e293b]/80 pl-9 pr-3 text-sm text-gray-700 dark:text-[#94a3b8] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400" />
           </div>
           <button type="button" onClick={() => setSearchOpen(true)}
             className="flex sm:hidden h-9 w-9 items-center justify-center rounded-lg border border-gray-200/80 dark:border-[#1e293b] bg-white/80 dark:bg-[#1e293b]/80 text-gray-500 dark:text-[#94a3b8]">
