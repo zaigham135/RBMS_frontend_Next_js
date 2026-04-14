@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getToken, getRole, getDashboardPath } from "@/lib/auth";
@@ -11,20 +11,79 @@ import {
   ArrowRight, Star, ChevronRight, Calendar, Bell, Layout,
 } from "lucide-react";
 
+/* ── Animated counter hook ─────────────────────────────────────────────── */
+function useCounter(target: number, duration = 1800, started = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!started) return;
+    let start = 0;
+    const step = Math.ceil(target / (duration / 16));
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(start);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration, started]);
+  return count;
+}
+
+/* ── Intersection observer hook ────────────────────────────────────────── */
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, inView };
+}
+
+/* ── Animated section wrapper ──────────────────────────────────────────── */
+function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, inView } = useInView();
+  return (
+    <div ref={ref} className={className} style={{ opacity: inView ? 1 : 0, transform: inView ? "translateY(0)" : "translateY(28px)", transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Stats counter item ─────────────────────────────────────────────────── */
+function StatItem({ value, suffix, label, dark }: { value: number; suffix: string; label: string; dark: boolean }) {
+  const { ref, inView } = useInView(0.3);
+  const count = useCounter(value, 1600, inView);
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-[36px] font-bold tracking-tight text-[#4c8cff]">
+        {count.toLocaleString()}{suffix}
+      </div>
+      <div className={`mt-1 text-[13px] ${dark ? "text-white/45" : "text-gray-500"}`}>{label}</div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const { dark, toggle } = useGuestTheme();
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const token = getToken();
     const role = getRole();
-    if (token && role) {
-      router.replace(getDashboardPath(role));
-    } else {
-      setChecking(false);
-    }
+    if (token && role) { router.replace(getDashboardPath(role)); }
+    else setChecking(false);
   }, [router]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   if (checking) {
     return (
@@ -34,14 +93,17 @@ export default function HomePage() {
     );
   }
 
-  // Shorthand helpers
-  const t = (d: string, l: string) => dark ? d : l;
-
   return (
     <div className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${dark ? "bg-[#0b1120] text-white" : "bg-white text-[#0f172a]"}`}>
 
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? "border-white/8 bg-[#0b1120]/80" : "border-gray-100 bg-white/90"}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? dark ? "border-white/8 bg-[#0b1120]/60 backdrop-blur-2xl shadow-[0_1px_20px_rgba(0,0,0,0.3)]"
+                 : "border-gray-100/60 bg-white/60 backdrop-blur-2xl shadow-[0_1px_20px_rgba(0,0,0,0.06)]"
+          : dark ? "border-transparent bg-transparent backdrop-blur-sm"
+                 : "border-transparent bg-transparent backdrop-blur-sm"
+      }`}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4c8cff] shadow-[0_8px_20px_rgba(76,140,255,0.4)]">
@@ -50,15 +112,13 @@ export default function HomePage() {
             <span className="text-[17px] font-semibold tracking-tight">TaskMan</span>
           </div>
           <div className="hidden items-center gap-8 md:flex">
-            {["features","roles","stats"].map(id => (
-              <a key={id} href={`#${id}`} className={`text-[14px] capitalize transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>{id === "stats" ? "Why Us" : id.charAt(0).toUpperCase() + id.slice(1)}</a>
+            {[["features","Features"],["roles","Roles"],["stats","Why Us"]].map(([id, label]) => (
+              <a key={id} href={`#${id}`} className={`text-[14px] transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>{label}</a>
             ))}
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle dark={dark} onToggle={toggle} />
-            <Link href="/login" className={`text-[14px] font-medium transition-colors ${dark ? "text-white/70 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
-              Sign in
-            </Link>
+            <Link href="/login" className={`text-[14px] font-medium transition-colors ${dark ? "text-white/70 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>Sign in</Link>
             <Link href="/register" className="rounded-xl bg-[#4c8cff] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_4px_14px_rgba(76,140,255,0.35)] transition-all hover:bg-[#3a7aee]">
               Get started
             </Link>
@@ -68,68 +128,74 @@ export default function HomePage() {
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-24 pb-16 text-center">
-        {/* Background glow — dark only */}
         {dark && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute left-1/2 top-1/3 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4c8cff]/10 blur-[120px]" />
             <div className="absolute right-1/4 top-1/2 h-[300px] w-[300px] rounded-full bg-[#7c66ff]/8 blur-[80px]" />
           </div>
         )}
-        {/* Light mode subtle grid */}
         {!dark && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-40">
             <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, #e2e8f0 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
           </div>
         )}
 
-        <div className={`mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-blue-50"}`}>
-          <Zap className="h-3.5 w-3.5 text-[#4c8cff]" />
-          <span className="text-[13px] font-medium text-[#4c8cff]">Role-Based Task Management</span>
-        </div>
+        <FadeIn delay={0}>
+          <div className={`mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-blue-50"}`}>
+            <Zap className="h-3.5 w-3.5 text-[#4c8cff]" />
+            <span className="text-[13px] font-medium text-[#4c8cff]">Role-Based Task Management</span>
+          </div>
+        </FadeIn>
 
-        <h1 className="relative max-w-3xl text-[52px] font-bold leading-[1.1] tracking-[-0.04em] sm:text-[64px]">
-          Manage Tasks.
-          <br />
-          <span className="bg-gradient-to-r from-[#4c8cff] via-[#7c66ff] to-[#a78bfa] bg-clip-text text-transparent">
-            Empower Teams.
-          </span>
-        </h1>
+        <FadeIn delay={80}>
+          <h1 className="relative max-w-3xl text-[52px] font-bold leading-[1.1] tracking-[-0.04em] sm:text-[64px]">
+            Manage Tasks.
+            <br />
+            <span className="bg-gradient-to-r from-[#4c8cff] via-[#7c66ff] to-[#a78bfa] bg-clip-text text-transparent">
+              Empower Teams.
+            </span>
+          </h1>
+        </FadeIn>
 
-        <p className={`relative mt-6 max-w-xl text-[17px] leading-relaxed ${dark ? "text-white/55" : "text-gray-500"}`}>
-          TaskMan gives Admins, Managers, and Employees the right tools for their role — so your team stays aligned, productive, and always moving forward.
-        </p>
+        <FadeIn delay={160}>
+          <p className={`relative mt-6 max-w-xl text-[17px] leading-relaxed ${dark ? "text-white/55" : "text-gray-500"}`}>
+            TaskMan gives Admins, Managers, and Employees the right tools for their role — so your team stays aligned, productive, and always moving forward.
+          </p>
+        </FadeIn>
 
-        <div className="relative mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link href="/register" className="flex items-center gap-2 rounded-2xl bg-[#4c8cff] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(76,140,255,0.4)] transition-all hover:bg-[#3a7aee]">
-            Start for free <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link href="/login" className={`flex items-center gap-2 rounded-2xl border px-7 py-3.5 text-[15px] font-semibold transition-all ${dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 shadow-sm"}`}>
-            Sign in <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <FadeIn delay={240}>
+          <div className="relative mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/register" className="flex items-center gap-2 rounded-2xl bg-[#4c8cff] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(76,140,255,0.4)] transition-all hover:bg-[#3a7aee] hover:shadow-[0_12px_40px_rgba(76,140,255,0.55)] hover:-translate-y-0.5">
+              Start for free <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/login" className={`flex items-center gap-2 rounded-2xl border px-7 py-3.5 text-[15px] font-semibold transition-all hover:-translate-y-0.5 ${dark ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 shadow-sm"}`}>
+              Sign in <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </FadeIn>
 
-        {/* Social proof */}
-        <div className={`relative mt-12 flex flex-wrap items-center justify-center gap-6 text-[13px] ${dark ? "text-white/40" : "text-gray-400"}`}>
-          <div className="flex items-center gap-1.5">
-            <div className="flex -space-x-2">
-              {["#f08a77","#56b6ff","#7c66ff","#4ade80"].map((c, i) => (
-                <div key={i} style={{ backgroundColor: c }} className={`h-7 w-7 rounded-full border-2 ${dark ? "border-[#0b1120]" : "border-white"}`} />
-              ))}
+        <FadeIn delay={320}>
+          <div className={`relative mt-12 flex flex-wrap items-center justify-center gap-6 text-[13px] ${dark ? "text-white/40" : "text-gray-400"}`}>
+            <div className="flex items-center gap-1.5">
+              <div className="flex -space-x-2">
+                {["#f08a77","#56b6ff","#7c66ff","#4ade80"].map((c, i) => (
+                  <div key={i} style={{ backgroundColor: c }} className={`h-7 w-7 rounded-full border-2 ${dark ? "border-[#0b1120]" : "border-white"}`} />
+                ))}
+              </div>
+              <span>2,000+ teams</span>
             </div>
-            <span>2,000+ teams</span>
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-[#fbbf24] text-[#fbbf24]" />)}
+              <span className="ml-1">4.9 / 5</span>
+            </div>
+            <span>No credit card required</span>
           </div>
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-[#fbbf24] text-[#fbbf24]" />)}
-            <span className="ml-1">4.9 / 5</span>
-          </div>
-          <span>No credit card required</span>
-        </div>
+        </FadeIn>
 
         {/* Dashboard mockup */}
-        <div className="relative mt-16 w-full max-w-4xl">
+        <FadeIn delay={400} className="relative mt-16 w-full max-w-4xl">
           <div className={`absolute inset-0 rounded-2xl blur-2xl ${dark ? "bg-gradient-to-b from-[#4c8cff]/20 to-transparent" : "bg-gradient-to-b from-blue-100 to-transparent"}`} />
           <div className={`relative overflow-hidden rounded-2xl border shadow-[0_40px_100px_rgba(0,0,0,0.15)] ${dark ? "border-white/10 bg-[#111827]" : "border-gray-200 bg-[#f8fafc]"}`}>
-            {/* Browser bar */}
             <div className={`flex items-center gap-2 border-b px-4 py-3 ${dark ? "border-white/8 bg-[#0d1424]" : "border-gray-200 bg-white"}`}>
               <div className="flex gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -140,7 +206,6 @@ export default function HomePage() {
                 my-rbms.vercel.app/manager
               </div>
             </div>
-            {/* Fake dashboard */}
             <div className={`grid grid-cols-[200px_1fr] divide-x ${dark ? "divide-white/8" : "divide-gray-200"}`}>
               <div className={`hidden space-y-1 p-4 sm:block ${dark ? "bg-[#0d1424]" : "bg-white"}`}>
                 <div className="mb-4 flex items-center gap-2 px-2">
@@ -184,31 +249,31 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
-      {/* ── Stats ──────────────────────────────────────────────────────── */}
-      <section id="stats" className={`border-y py-16 transition-colors ${dark ? "border-white/8 bg-white/3" : "border-gray-100 bg-gray-50"}`}>
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 px-6 sm:grid-cols-4">
-          {[["2,000+","Teams using TaskMan"],["98%","Task completion rate"],["3 Roles","Admin · Manager · Employee"],["<1s","Average response time"]].map(([val, label]) => (
-            <div key={label} className="text-center">
-              <div className="text-[32px] font-bold tracking-tight text-[#4c8cff]">{val}</div>
-              <div className={`mt-1 text-[13px] ${dark ? "text-white/45" : "text-gray-500"}`}>{label}</div>
-            </div>
-          ))}
+      {/* ── Stats (live counters) ───────────────────────────────────────── */}
+      <section id="stats" className={`border-y py-20 transition-colors ${dark ? "border-white/8 bg-white/3" : "border-gray-100 bg-gray-50"}`}>
+        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-10 px-6 sm:grid-cols-4">
+          <StatItem value={2000}  suffix="+"  label="Teams using TaskMan"          dark={dark} />
+          <StatItem value={98}    suffix="%"  label="Task completion rate"         dark={dark} />
+          <StatItem value={3}     suffix=""   label="Roles: Admin · Manager · Emp" dark={dark} />
+          <StatItem value={1}     suffix="s"  label="Average response time"        dark={dark} />
         </div>
       </section>
 
       {/* ── Features ───────────────────────────────────────────────────── */}
       <section id="features" className="px-6 py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-16 text-center">
-            <div className={`mb-3 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-blue-50"}`}>
-              <span className="text-[13px] font-medium text-[#4c8cff]">Everything you need</span>
+          <FadeIn>
+            <div className="mb-16 text-center">
+              <div className={`mb-3 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-blue-50"}`}>
+                <span className="text-[13px] font-medium text-[#4c8cff]">Everything you need</span>
+              </div>
+              <h2 className="text-[38px] font-bold tracking-tight">Built for how teams actually work</h2>
+              <p className={`mt-4 text-[16px] ${dark ? "text-white/50" : "text-gray-500"}`}>Every feature is designed around real workflows — not the other way around.</p>
             </div>
-            <h2 className="text-[38px] font-bold tracking-tight">Built for how teams actually work</h2>
-            <p className={`mt-4 text-[16px] ${dark ? "text-white/50" : "text-gray-500"}`}>Every feature is designed around real workflows — not the other way around.</p>
-          </div>
+          </FadeIn>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { icon: CheckCircle2, color: "#4c8cff", bg: dark ? "rgba(76,140,255,0.12)" : "#eff6ff", title: "Smart Task Tracking", desc: "Create, assign, and track tasks with priorities, deadlines, and real-time status updates across your entire team." },
@@ -217,14 +282,16 @@ export default function HomePage() {
               { icon: Calendar,     color: "#fbbf24", bg: dark ? "rgba(251,191,36,0.12)"  : "#fffbeb", title: "Calendar View",       desc: "See all deadlines and milestones in a calendar layout. Never miss a due date again." },
               { icon: Bell,         color: "#f472b6", bg: dark ? "rgba(244,114,182,0.12)" : "#fdf2f8", title: "Activity Logs",       desc: "Full audit trail of every action — who did what and when. Stay informed without micromanaging." },
               { icon: Shield,       color: "#34d399", bg: dark ? "rgba(52,211,153,0.12)"  : "#f0fdf4", title: "Secure by Default",   desc: "JWT authentication, role-based permissions, and encrypted data keep your team's work safe." },
-            ].map(({ icon: Icon, color, bg, title, desc }) => (
-              <div key={title} className={`rounded-2xl border p-6 transition-all hover:scale-[1.02] ${dark ? "border-white/8 bg-white/4 hover:border-white/15" : "border-gray-100 bg-white shadow-sm hover:shadow-md"}`}>
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: bg }}>
-                  <Icon className="h-5 w-5" style={{ color }} />
+            ].map(({ icon: Icon, color, bg, title, desc }, i) => (
+              <FadeIn key={title} delay={i * 60}>
+                <div className={`h-full rounded-2xl border p-6 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 ${dark ? "border-white/8 bg-white/4 hover:border-white/15 hover:bg-white/7" : "border-gray-100 bg-white shadow-sm hover:shadow-lg"}`}>
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: bg }}>
+                    <Icon className="h-5 w-5" style={{ color }} />
+                  </div>
+                  <h3 className="text-[16px] font-semibold">{title}</h3>
+                  <p className={`mt-2 text-[14px] leading-relaxed ${dark ? "text-white/50" : "text-gray-500"}`}>{desc}</p>
                 </div>
-                <h3 className="text-[16px] font-semibold">{title}</h3>
-                <p className={`mt-2 text-[14px] leading-relaxed ${dark ? "text-white/50" : "text-gray-500"}`}>{desc}</p>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -233,35 +300,40 @@ export default function HomePage() {
       {/* ── Roles ──────────────────────────────────────────────────────── */}
       <section id="roles" className={`px-6 py-24 transition-colors ${dark ? "" : "bg-gray-50"}`}>
         <div className="mx-auto max-w-6xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-[38px] font-bold tracking-tight">One platform, three perspectives</h2>
-            <p className={`mt-4 text-[16px] ${dark ? "text-white/50" : "text-gray-500"}`}>Each role gets a tailored experience — the right data, the right controls.</p>
-          </div>
+          <FadeIn>
+            <div className="mb-16 text-center">
+              <h2 className="text-[38px] font-bold tracking-tight">One platform, three perspectives</h2>
+              <p className={`mt-4 text-[16px] ${dark ? "text-white/50" : "text-gray-500"}`}>Each role gets a tailored experience — the right data, the right controls.</p>
+            </div>
+          </FadeIn>
           <div className="grid gap-6 lg:grid-cols-3">
             {[
               { role: "Admin",    color: "#a78bfa", border: dark ? "border-[#a78bfa]/30" : "border-purple-200", glow: dark ? "rgba(167,139,250,0.12)" : "#faf5ff", icon: Shield,       perks: ["Manage all users & roles","Full system oversight","View all projects & tasks","Configure platform settings","Access complete audit logs"], desc: "Full control over the platform. Manage users, assign roles, and keep the entire organization running smoothly." },
               { role: "Manager", color: "#4c8cff", border: dark ? "border-[#4c8cff]/40" : "border-blue-300",   glow: dark ? "rgba(76,140,255,0.15)"  : "#eff6ff", icon: Layout,       perks: ["Create & manage projects","Assign tasks to employees","Track team progress","Review & approve work","Generate team reports"],          desc: "Lead your team with confidence. Create projects, assign work, and monitor progress — all in one place.", featured: true },
               { role: "Employee",color: "#4ade80", border: dark ? "border-[#4ade80]/30" : "border-green-200",  glow: dark ? "rgba(74,222,128,0.10)"  : "#f0fdf4", icon: CheckCircle2, perks: ["View assigned tasks","Update task status","Track personal progress","Collaborate with team","Access project calendar"],                   desc: "Stay focused on what matters. See your tasks, update progress, and collaborate without the noise." },
-            ].map(({ role, color, border, glow, icon: Icon, perks, desc, featured }) => (
-              <div key={role} className={`relative rounded-2xl border p-7 transition-all hover:scale-[1.02] ${border} ${dark ? "" : "bg-white shadow-sm"}`} style={dark ? { background: `radial-gradient(circle at top left, ${glow}, transparent 60%), rgba(255,255,255,0.03)` } : { background: `radial-gradient(circle at top left, ${glow}, white 60%)` }}>
-                {featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4c8cff] px-4 py-1 text-[12px] font-semibold text-white shadow-[0_4px_14px_rgba(76,140,255,0.4)]">
-                    Most Popular
+            ].map(({ role, color, border, glow, icon: Icon, perks, desc, featured }, i) => (
+              <FadeIn key={role} delay={i * 100}>
+                <div className={`relative h-full rounded-2xl border p-7 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 ${border} ${dark ? "" : "bg-white shadow-sm hover:shadow-lg"}`}
+                  style={dark ? { background: `radial-gradient(circle at top left, ${glow}, transparent 60%), rgba(255,255,255,0.03)` } : { background: `radial-gradient(circle at top left, ${glow}, white 60%)` }}>
+                  {featured && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#4c8cff] px-4 py-1 text-[12px] font-semibold text-white shadow-[0_4px_14px_rgba(76,140,255,0.4)]">
+                      Most Popular
+                    </div>
+                  )}
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}20` }}>
+                    <Icon className="h-6 w-6" style={{ color }} />
                   </div>
-                )}
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}20` }}>
-                  <Icon className="h-6 w-6" style={{ color }} />
+                  <h3 className="text-[22px] font-bold" style={{ color }}>{role}</h3>
+                  <p className={`mt-2 text-[14px] leading-relaxed ${dark ? "text-white/50" : "text-gray-500"}`}>{desc}</p>
+                  <ul className="mt-5 space-y-2.5">
+                    {perks.map(p => (
+                      <li key={p} className={`flex items-center gap-2.5 text-[14px] ${dark ? "text-white/70" : "text-gray-600"}`}>
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color }} />{p}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-[22px] font-bold" style={{ color }}>{role}</h3>
-                <p className={`mt-2 text-[14px] leading-relaxed ${dark ? "text-white/50" : "text-gray-500"}`}>{desc}</p>
-                <ul className="mt-5 space-y-2.5">
-                  {perks.map(p => (
-                    <li key={p} className={`flex items-center gap-2.5 text-[14px] ${dark ? "text-white/70" : "text-gray-600"}`}>
-                      <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color }} />{p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -269,29 +341,31 @@ export default function HomePage() {
 
       {/* ── CTA ────────────────────────────────────────────────────────── */}
       <section className="px-6 py-24">
-        <div className={`relative mx-auto max-w-3xl overflow-hidden rounded-3xl border p-12 text-center ${dark ? "border-[#4c8cff]/25 bg-gradient-to-br from-[#111d3a] to-[#0d1424] shadow-[0_40px_80px_rgba(0,0,0,0.4)]" : "border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg"}`}>
-          <div className="pointer-events-none absolute inset-0">
-            <div className={`absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px] ${dark ? "bg-[#4c8cff]/15" : "bg-blue-200/50"}`} />
-          </div>
-          <div className="relative">
-            <div className={`mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-white"}`}>
-              <Zap className="h-3.5 w-3.5 text-[#4c8cff]" />
-              <span className="text-[13px] font-medium text-[#4c8cff]">Free to get started</span>
+        <FadeIn>
+          <div className={`relative mx-auto max-w-3xl overflow-hidden rounded-3xl border p-12 text-center ${dark ? "border-[#4c8cff]/25 bg-gradient-to-br from-[#111d3a] to-[#0d1424] shadow-[0_40px_80px_rgba(0,0,0,0.4)]" : "border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg"}`}>
+            <div className="pointer-events-none absolute inset-0">
+              <div className={`absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px] ${dark ? "bg-[#4c8cff]/15" : "bg-blue-200/50"}`} />
             </div>
-            <h2 className="text-[38px] font-bold tracking-tight">Ready to take control?</h2>
-            <p className={`mt-4 text-[16px] ${dark ? "text-white/55" : "text-gray-500"}`}>
-              Join thousands of teams already using TaskMan to ship faster, collaborate better, and stay organized.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/register" className="flex items-center gap-2 rounded-2xl bg-[#4c8cff] px-8 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(76,140,255,0.4)] transition-all hover:bg-[#3a7aee]">
-                Create your account <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/login" className={`rounded-2xl border px-8 py-3.5 text-[15px] font-semibold transition-all ${dark ? "border-white/15 text-white/80 hover:border-white/30 hover:text-white" : "border-gray-300 text-gray-700 hover:border-gray-400 bg-white"}`}>
-                Sign in
-              </Link>
+            <div className="relative">
+              <div className={`mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 ${dark ? "border-[#4c8cff]/30 bg-[#4c8cff]/10" : "border-blue-200 bg-white"}`}>
+                <Zap className="h-3.5 w-3.5 text-[#4c8cff]" />
+                <span className="text-[13px] font-medium text-[#4c8cff]">Free to get started</span>
+              </div>
+              <h2 className="text-[38px] font-bold tracking-tight">Ready to take control?</h2>
+              <p className={`mt-4 text-[16px] ${dark ? "text-white/55" : "text-gray-500"}`}>
+                Join thousands of teams already using TaskMan to ship faster, collaborate better, and stay organized.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link href="/register" className="flex items-center gap-2 rounded-2xl bg-[#4c8cff] px-8 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_30px_rgba(76,140,255,0.4)] transition-all hover:bg-[#3a7aee] hover:-translate-y-0.5">
+                  Create your account <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/login" className={`rounded-2xl border px-8 py-3.5 text-[15px] font-semibold transition-all hover:-translate-y-0.5 ${dark ? "border-white/15 text-white/80 hover:border-white/30 hover:text-white" : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"}`}>
+                  Sign in
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────── */}
