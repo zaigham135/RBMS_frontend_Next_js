@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   const root = document.documentElement;
                   if (theme === 'dark') {
                     root.classList.add('dark');
-                    root.style.backgroundColor = '#0f172a';
+                    root.style.backgroundColor = '#0b1120';
                   } else {
                     root.classList.remove('dark');
                     root.style.backgroundColor = '#ffffff';

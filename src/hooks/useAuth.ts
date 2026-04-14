@@ -105,6 +105,20 @@ export function useAuth() {
   };
 
   const logout = () => {
+    // Copy the user's current theme to guest key so login/landing page
+    // doesn't flash to a different theme on logout
+    try {
+      const authData = localStorage.getItem("tm-auth-storage");
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        const uid = parsed?.state?.userId;
+        if (uid) {
+          const userTheme = localStorage.getItem(`theme:${uid}`);
+          if (userTheme) localStorage.setItem("theme:guest", userTheme);
+        }
+      }
+    } catch (_) {}
+
     clearAuth();
     // Clear all auth-related keys including Zustand persist key
     ["token", "role", "name", "email", "userId", "profilePhoto", "tm-auth-storage"].forEach(k => localStorage.removeItem(k));
