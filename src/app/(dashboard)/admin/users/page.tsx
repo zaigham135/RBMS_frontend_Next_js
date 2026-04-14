@@ -4,14 +4,14 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useUsers } from "@/hooks/useUsers";
 import type { Designation, Role, UserStatus } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
+import { AppTopBar } from "@/components/common/AppTopBar";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { FilterBar } from "@/components/common/FilterBar";
 import { ActionButton, Panel, PaginationDisplay, StatCard } from "@/components/common/NexusUI";
 import { designationService } from "@/services/designationService";
 import {
-  Bell, Briefcase, Check, ChevronDown, Download,
-  Hourglass, Moon, Plus, Search, ShieldCheck, Sun, Trash2, UserPlus, UsersRound, X,
+  Briefcase, Check, ChevronDown, Download,
+  Hourglass, Plus, ShieldCheck, Trash2, UserPlus, UsersRound, X,
 } from "lucide-react";
 import { downloadTextFile } from "@/lib/download";
 import { toast } from "sonner";
@@ -261,7 +261,6 @@ function ManageDesignationsPanel({ designations, onRefresh }: {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AdminUsersPage() {
   const { name, profilePhoto, userId } = useAuth();
-  const { isDark, toggle } = useTheme(userId ?? undefined);
   const { users, isLoading, fetchAllUsers, updateUserRole, updateUserStatus } = useUsers();
 
   const [page, setPage]               = useState(0);
@@ -313,40 +312,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-full bg-[#f7fbff] dark:bg-[#0f172a]">
-      {/* Topbar */}
-      <div className="flex items-center justify-between border-b border-[#e3ebf5] bg-[#f7fbff] px-6 py-4 dark:bg-[#0f172a] dark:border-[#1e293b]">
-        <div>
-          <h1 className="text-[18px] font-bold text-[#101828] dark:text-[#f1f5f9]">User Management</h1>
-          <p className="text-[13px] text-[#667085] dark:text-[#94a3b8]">Manage roles, designations and account status</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 rounded-[14px] bg-[#edf4fa] px-3.5 py-2 text-[#667085] dark:bg-[#1e293b] dark:text-[#94a3b8]">
-            <Search className="h-4 w-4 shrink-0" />
-            <input value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
-              placeholder="Search users by name or email"
-              className="w-52 bg-transparent text-[13px] outline-none placeholder:text-[#9aa5b4] dark:text-[#94a3b8]" />
-          </label>
-          <button type="button" className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#e3ebf5] bg-[#f7fbff] text-[#51607a] dark:border-[#334155] dark:bg-[#0f172a] dark:text-[#94a3b8]">
-            <Bell className="h-4 w-4" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#d14343]" />
-          </button>
-          <button
-            type="button"
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            onClick={toggle}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e3ebf5] dark:border-[#334155] bg-white dark:bg-[#1e293b] text-[#51607a] dark:text-[#94a3b8] transition-colors hover:bg-[#f8fbff] dark:hover:bg-[#334155]"
-          >
-            {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <Link href="/admin/account" className="flex items-center gap-2.5 rounded-[16px] px-2 py-1.5 hover:bg-[#f4f8fc] dark:hover:bg-[#1e293b]">
-            <UserAvatar name={name} src={profilePhoto} className="h-9 w-9 ring-0" />
-            <div className="leading-tight">
-              <div className="text-[13px] font-semibold text-[#111827] dark:text-[#f1f5f9]">{name ?? "System Admin"}</div>
-              <div className="text-[11px] uppercase tracking-[0.08em] text-[#6b7280] dark:text-[#64748b]">Super User</div>
-            </div>
-          </Link>
-        </div>
-      </div>
+      <AppTopBar title="User Management" searchPlaceholder="Search users by name or email..." />
 
       <div className="space-y-6 px-6 py-6">
         {/* Stats */}
