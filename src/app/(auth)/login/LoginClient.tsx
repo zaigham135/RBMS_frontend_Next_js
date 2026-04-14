@@ -8,12 +8,15 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthRedirectCard } from "@/components/auth/AuthRedirectCard";
 import { authTheme } from "@/components/auth/authTheme";
+import { useGuestTheme } from "@/hooks/useGuestTheme";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 const REMEMBERED_EMAIL_KEY = "tm_remembered_email";
 
 export function LoginClient() {
   const { login, loginWithGoogle, completeOAuthLogin } = useAuth();
   const searchParams = useSearchParams();
+  const { dark, toggle } = useGuestTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -105,7 +108,11 @@ export function LoginClient() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f5f7fb] p-3 lg:p-5 animate-in fade-in duration-300">
+    <div className={`h-screen overflow-hidden p-3 lg:p-5 transition-colors duration-300 ${dark ? "bg-[#0b1120]" : "bg-[#f5f7fb]"}`}>
+      {/* Theme toggle — top right corner */}
+      <div className="absolute right-5 top-5 z-50">
+        <ThemeToggle dark={dark} onToggle={toggle} />
+      </div>
       {(isLoading || isGoogleLoading) ? (
         <AuthRedirectCard
           overlay

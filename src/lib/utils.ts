@@ -31,10 +31,50 @@ export function debounce<T extends (...args: unknown[]) => void>(
 }
 
 export function getErrorMessage(error: unknown): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as { response?: { data?: { message?: string } } };
-    return axiosError.response?.data?.message || "An unexpected error occurred";
+  if (error && typeof error === "object" && error !== null) {
+    // Handle Axios errors
+    if ("response" in error) {
+      const axiosError = error as { 
+        response?: { 
+          status?: number;
+          data?: { 
+            message?: string;
+            status?: string;
+          } 
+        } 
+      };
+      
+      const status = axiosError.response?.status;
+      const data = axiosError.response?.data;
+      
+      if (status === 404) {
+        return "User not found. Please check your credentials.";
+      }
+      if (status === 400) {
+        return data?.message || "Invalid request. Please check your input.";
+      }
+      if (status === 401) {
+        return "Invalid email or password. Please try again.";
+      }
+      if (status === 500) {
+        return "Server error. Please try again later.";
+      }
+      if (data?.message) {
+        return data.message;
+      }
+      return `Server error (${status}). Please try again.`;
+    }
+    
+    // Handle Error instances
+    if (error instanceof Error) {
+      return error.message;
+    }
   }
-  if (error instanceof Error) return error.message;
-  return "An unexpected error occurred";
+  
+  // Handle string errors
+  if (typeof error === "string") {
+    return error;
+  }
+  
+  return "An unexpected error occurred. Please try again.";
 }

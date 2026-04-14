@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthRedirectCard } from "@/components/auth/AuthRedirectCard";
 import { authTheme } from "@/components/auth/authTheme";
+import { useGuestTheme } from "@/hooks/useGuestTheme";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 
 const rotatingMessages = [
   "Setting up your account...",
@@ -18,6 +20,7 @@ const rotatingMessages = [
 export function RegisterClient() {
   const { register, completeOAuthLogin } = useAuth();
   const searchParams = useSearchParams();
+  const { dark, toggle } = useGuestTheme();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
@@ -73,7 +76,11 @@ export function RegisterClient() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f5f7fb] p-3 lg:p-5">
+    <div className={`h-screen overflow-hidden p-3 lg:p-5 transition-colors duration-300 ${dark ? "bg-[#0b1120]" : "bg-[#f5f7fb]"}`}>
+      {/* Theme toggle — top right corner */}
+      <div className="absolute right-5 top-5 z-50">
+        <ThemeToggle dark={dark} onToggle={toggle} />
+      </div>
       {isLoading ? (
         <AuthRedirectCard
           overlay
