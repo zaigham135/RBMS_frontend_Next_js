@@ -193,8 +193,11 @@ export default function AdminTasksPage() {
               <div className="col-span-2 flex items-center gap-2">
                 {task.assignedToName ? (
                   <>
-                    <UserAvatar name={task.assignedToName} src={task.assignedToPhoto} className="h-7 w-7 ring-0" />
-                    <span className="text-[13px] font-medium text-[#1f2937] line-clamp-1 dark:text-[#f1f5f9]">{task.assignedToName}</span>
+                    <UserAvatar name={task.assignedToName} src={task.assignedToPhoto} className="h-7 w-7 ring-0 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-medium text-[#1f2937] truncate dark:text-[#f1f5f9]">{task.assignedToName}</div>
+                      {task.assignedToEmail && <div className="text-[11px] text-[#7b8794] truncate dark:text-[#64748b]">{task.assignedToEmail}</div>}
+                    </div>
                   </>
                 ) : <div className="h-4 w-24 rounded-full bg-[#edf2f7] dark:bg-[#334155]" />}
               </div>
