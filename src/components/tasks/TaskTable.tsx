@@ -27,13 +27,13 @@ export const TaskTable = memo(function TaskTable({ tasks, onView, onUpdate, onDe
         { header: "Title", cell: (t) => <span className="font-medium">{t.title}</span> },
         { header: "Project", accessor: "projectName" },
         {
-          header: "Assigned To",
+          header: "Assigned By",
           cell: (t) => (
             <div className="flex items-center gap-3">
-              <UserAvatar name={t.assignedToName} src={t.assignedToPhoto} className="h-8 w-8" />
+              <UserAvatar name={t.managerName ?? t.createdByName} src={t.managerPhoto} className="h-8 w-8" />
               <div className="min-w-0">
-                <p className="truncate font-medium">{t.assignedToName}</p>
-                {t.assignedToEmail && <p className="truncate text-xs text-muted-foreground">{t.assignedToEmail}</p>}
+                <p className="truncate font-medium">{t.managerName ?? t.createdByName ?? "—"}</p>
+                {t.managerEmail && <p className="truncate text-xs text-muted-foreground">{t.managerEmail}</p>}
               </div>
             </div>
           ),
