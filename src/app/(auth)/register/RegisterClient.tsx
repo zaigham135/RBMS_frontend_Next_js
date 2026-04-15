@@ -55,7 +55,7 @@ export function RegisterClient() {
   };
 
   return (
-    <div className={`relative h-screen overflow-hidden p-3 transition-colors duration-300 lg:p-5 ${dark ? "bg-[#0b1120]" : "bg-[#f5f7fb]"}`}>
+    <div className={`relative h-screen overflow-hidden transition-colors duration-300 ${dark ? "bg-[#0b1120]" : "bg-white"}`}>
       {/* Theme toggle */}
       <div className="absolute right-5 top-5 z-50">
         <ThemeToggle dark={dark} onToggle={toggle} />

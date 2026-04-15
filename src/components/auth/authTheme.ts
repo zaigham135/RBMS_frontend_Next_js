@@ -3,13 +3,11 @@ export function getAuthTheme(dark: boolean) {
     overlayTitle: dark ? "mt-5 text-center text-[18px] font-semibold text-white" : "mt-5 text-center text-[18px] font-semibold text-[#101828]",
     overlayBody:  dark ? "mt-2 text-center text-[14px] text-white/60"            : "mt-2 text-center text-[14px] text-[#667085]",
 
-    shell: dark
-      ? "mx-auto flex h-full max-w-[1200px] items-center justify-center rounded-[26px] border border-white/10 bg-[#111827] px-4 py-4 shadow-[0_18px_50px_rgba(0,0,0,0.4)] lg:px-8 lg:py-6"
-      : "mx-auto flex h-full max-w-[1200px] items-center justify-center rounded-[26px] border border-[#d7dfeb] bg-[#f7f9fc] px-4 py-4 shadow-[0_18px_50px_rgba(16,24,40,0.06)] lg:px-8 lg:py-6",
+    shell: "flex h-screen w-full items-center justify-center",
 
     card: dark
-      ? "grid h-full max-h-full w-full max-w-[940px] overflow-hidden rounded-[28px] bg-[#1e293b] shadow-[0_28px_70px_rgba(0,0,0,0.5)] lg:max-h-[680px] lg:grid-cols-[1.02fr_1fr]"
-      : "grid h-full max-h-full w-full max-w-[940px] overflow-hidden rounded-[28px] bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)] lg:max-h-[680px] lg:grid-cols-[1.02fr_1fr]",
+      ? "grid h-full w-full overflow-hidden bg-[#1e293b] lg:grid-cols-[1.02fr_1fr]"
+      : "grid h-full w-full overflow-hidden bg-white lg:grid-cols-[1.02fr_1fr]",
 
     // Left panel stays dark always (it's the branded gradient panel)
     leftPanel: "hidden h-full flex-col justify-between bg-[radial-gradient(circle_at_bottom_left,_rgba(84,60,173,0.28),_transparent_30%),linear-gradient(160deg,#151d35_0%,#11192f_48%,#172544_100%)] px-10 py-9 text-white lg:flex",
@@ -19,8 +17,8 @@ export function getAuthTheme(dark: boolean) {
     heroMeta:   "text-[14px] text-white/78",
 
     rightPanel: dark
-      ? "flex h-full flex-col overflow-hidden bg-[#1e293b] px-7 py-8 sm:px-10 lg:px-12 lg:py-9"
-      : "flex h-full flex-col overflow-hidden px-7 py-8 sm:px-10 lg:px-12 lg:py-9",
+      ? "flex h-full flex-col overflow-y-auto bg-[#1e293b] px-7 py-8 sm:px-10 lg:px-12 lg:py-9"
+      : "flex h-full flex-col overflow-y-auto bg-white px-7 py-8 sm:px-10 lg:px-12 lg:py-9",
 
     title:    dark ? "text-[28px] font-semibold tracking-[-0.04em] text-white"    : "text-[28px] font-semibold tracking-[-0.04em] text-[#0f172a]",
     subtitle: dark ? "mt-3 text-[15px] text-white/50"                             : "mt-3 text-[15px] text-[#64748b]",
