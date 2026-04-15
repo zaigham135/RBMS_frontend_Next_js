@@ -80,7 +80,7 @@ export function LoginClient() {
   };
 
   return (
-    <div className={`relative h-screen overflow-hidden transition-colors duration-300 ${dark ? "bg-[#0b1120]" : "bg-white"}`}>
+    <div className={`relative h-screen overflow-hidden transition-colors duration-300 ${dark ? "bg-[#060d1a]" : "bg-[#eef2f7]"}`}>
       {/* Theme toggle */}
       <div className="absolute right-5 top-5 z-50">
         <ThemeToggle dark={dark} onToggle={toggle} />

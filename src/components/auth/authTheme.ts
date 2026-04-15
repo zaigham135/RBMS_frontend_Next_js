@@ -3,11 +3,13 @@ export function getAuthTheme(dark: boolean) {
     overlayTitle: dark ? "mt-5 text-center text-[18px] font-semibold text-white" : "mt-5 text-center text-[18px] font-semibold text-[#101828]",
     overlayBody:  dark ? "mt-2 text-center text-[14px] text-white/60"            : "mt-2 text-center text-[14px] text-[#667085]",
 
-    shell: "flex h-screen w-full items-center justify-center",
+    shell: dark
+      ? "flex h-screen w-full items-center justify-center bg-[#060d1a] px-4 py-6"
+      : "flex h-screen w-full items-center justify-center bg-[#eef2f7] px-4 py-6",
 
     card: dark
-      ? "grid h-full w-full overflow-hidden bg-[#1e293b] lg:grid-cols-[1.02fr_1fr]"
-      : "grid h-full w-full overflow-hidden bg-white lg:grid-cols-[1.02fr_1fr]",
+      ? "grid w-full max-w-[960px] max-h-[calc(100vh-48px)] overflow-hidden rounded-[32px] bg-[#1e293b] shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] lg:grid-cols-[1.05fr_1fr]"
+      : "grid w-full max-w-[960px] max-h-[calc(100vh-48px)] overflow-hidden rounded-[32px] bg-white shadow-[0_32px_80px_rgba(15,23,42,0.14),0_0_0_1px_rgba(0,0,0,0.04)] lg:grid-cols-[1.05fr_1fr]",
 
     // Left panel stays dark always (it's the branded gradient panel)
     leftPanel: "hidden h-full flex-col justify-between bg-[radial-gradient(circle_at_bottom_left,_rgba(84,60,173,0.28),_transparent_30%),linear-gradient(160deg,#151d35_0%,#11192f_48%,#172544_100%)] px-10 py-9 text-white lg:flex",
