@@ -4,12 +4,12 @@ export function getAuthTheme(dark: boolean) {
     overlayBody:  dark ? "mt-2 text-center text-[14px] text-white/60"            : "mt-2 text-center text-[14px] text-[#667085]",
 
     shell: dark
-      ? "flex h-screen w-full items-center justify-center bg-[#060d1a] px-4 py-6"
-      : "flex h-screen w-full items-center justify-center bg-[#eef2f7] px-4 py-6",
+      ? "flex min-h-screen w-full items-center justify-center bg-[#060d1a] px-4 py-8"
+      : "flex min-h-screen w-full items-center justify-center bg-[#eef2f7] px-4 py-8",
 
     card: dark
-      ? "grid w-full max-w-[960px] max-h-[calc(100vh-48px)] overflow-hidden rounded-[32px] bg-[#1e293b] shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] lg:grid-cols-[1.05fr_1fr]"
-      : "grid w-full max-w-[960px] max-h-[calc(100vh-48px)] overflow-hidden rounded-[32px] bg-white shadow-[0_32px_80px_rgba(15,23,42,0.14),0_0_0_1px_rgba(0,0,0,0.04)] lg:grid-cols-[1.05fr_1fr]",
+      ? "grid w-full max-w-[960px] overflow-hidden rounded-[32px] bg-[#1e293b] shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] lg:grid-cols-[1.05fr_1fr] lg:min-h-[640px]"
+      : "grid w-full max-w-[960px] overflow-hidden rounded-[32px] bg-white shadow-[0_32px_80px_rgba(15,23,42,0.14),0_0_0_1px_rgba(0,0,0,0.04)] lg:grid-cols-[1.05fr_1fr] lg:min-h-[640px]",
 
     // Left panel stays dark always (it's the branded gradient panel)
     leftPanel: "hidden h-full flex-col justify-between bg-[radial-gradient(circle_at_bottom_left,_rgba(84,60,173,0.28),_transparent_30%),linear-gradient(160deg,#151d35_0%,#11192f_48%,#172544_100%)] px-10 py-9 text-white lg:flex",
