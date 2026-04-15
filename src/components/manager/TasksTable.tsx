@@ -33,7 +33,7 @@ export function TasksTable({ tasks, onView, onEdit, onDelete }: TasksTableProps)
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Project</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Status</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Priority</th>
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Assigned By</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Assigned To</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Due Date</th>
               <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-[#64748b]">Actions</th>
             </tr>
@@ -58,10 +58,10 @@ export function TasksTable({ tasks, onView, onEdit, onDelete }: TasksTableProps)
                   <td className="px-4 py-3"><PriorityBadge priority={task.priority} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <UserAvatar name={task.managerName ?? task.createdByName} src={task.managerPhoto} className="h-6 w-6" />
+                      <UserAvatar name={task.assignedToName} src={task.assignedToPhoto} className="h-6 w-6" />
                       <div className="min-w-0">
-                        <div className="text-sm text-gray-700 dark:text-[#cbd5e1] truncate">{task.managerName ?? task.createdByName ?? "—"}</div>
-                        {task.managerEmail && <div className="text-[11px] text-gray-400 dark:text-[#64748b] truncate">{task.managerEmail}</div>}
+                        <div className="text-sm text-gray-700 dark:text-[#cbd5e1] truncate">{task.assignedToName ?? "—"}</div>
+                        {task.assignedToEmail && <div className="text-[11px] text-gray-400 dark:text-[#64748b] truncate">{task.assignedToEmail}</div>}
                       </div>
                     </div>
                   </td>
